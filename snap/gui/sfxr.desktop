@@ -1,0 +1,11 @@
+
+[Desktop Entry]
+Name=sfxr
+Comment=Generate sound effects
+Exec=sfxr
+Icon=${SNAP}/meta/gui/sfxr.png
+Terminal=false
+StartupNotify=false
+Type=Application
+Categories=AudioVideo;Audio;AudioVideoEditing;
+X-Desktop-File-Install-Version=0.20
