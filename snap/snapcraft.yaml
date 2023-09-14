@@ -8,7 +8,10 @@ description: Create sound effects
 layout:
   /usr/lib/$SNAPCRAFT_ARCH_TRIPLET/alsa-lib:
     bind: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/alsa-lib
-
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: armhf
 license: MIT
 grade: stable
 confinement: strict
