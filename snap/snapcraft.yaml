@@ -4,22 +4,21 @@ version: 1.2.1
 summary: Create sound effects
 description: Create sound effects
 
+
 layout:
   /usr/lib/$SNAPCRAFT_ARCH_TRIPLET/alsa-lib:
     bind: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/alsa-lib
-  /usr/share/alsa:
-    bind: $SNAP/usr/share/alsa
 
 license: MIT
 grade: stable
 confinement: strict
 apps:
   sfxr:
-    command-chain: ["snap/command-chain/alsa-launch"]
+    extensions: [ gnome-3-38 ]
     command: usr/local/bin/sfxr
     environment:
       LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio
-      ALWAYS_USE_PULSEAUDIO: '1'
+      ALSA_CONFIG_PATH: "$SNAP/etc/asound.conf"
     plugs:
     - alsa
     - audio-playback
@@ -29,39 +28,27 @@ apps:
     - opengl
     - desktop
 parts:
-  alsa-mixin:
+  alsa-pulseaudio:
     plugin: dump
-    source: https://github.com/diddlesnaps/snapcraft-alsa.git
-    source-subdir: snapcraft-assets
-    build-packages:
-      - libasound2-dev
-    stage-packages:
-      - libasound2
-      - libasound2-plugins
-      - yad
-    stage:
-      # restrict to only audio-related files - you need to ensure
-      # that gtk3 is staged for yad to work correctly, to prompt
-      # users to connect the alsa plug or proceed with pulseaudio.
-      #
-      # This helps prevent symbol conflicts in situations where
-      # you're using a non-default library, such as those that the
-      # gnome-3-34 extension for core18 provides.
-      - etc/asound.conf
-      - snap/command-chain/alsa-launch
-      - usr/bin/yad*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/alsa-lib
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libasound*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libdnsfile*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libFLAC*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libjack*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libpulse*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libsamplerate*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libspeex*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libvorbis*
-      - usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio
+    source: .
+    override-pull: |
+      mkdir etc -p
+      cat > etc/asound.conf <<EOF
+      pcm.!default {
+          type pulse
+          fallback "sysdefault"
+          hint {
+              show on
+              description "Default ALSA Output (currently PulseAudio Sound Server)"
+          }
+      }
+      ctl.!default {
+          type pulse
+          fallback "sysdefault"
+      }
+      EOF
   sfxr:
-    after: [alsa-mixin]
+    after: [alsa-pulseaudio]
     plugin: autotools
     source: https://github.com/popey/sfxr.git
     source-subdir: sfxr
@@ -75,6 +62,7 @@ parts:
     - build-essential
     stage-packages:
     - libasound2
+    - libasound2-plugins
     - libasyncns0
     - libcaca0
     - libflac8
